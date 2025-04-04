@@ -12,8 +12,9 @@
 #include "BuforDanych.h"
 #include "Sygnal.h"
 #include "PID.h"
-#include "ARX.h"
+
 #include <qDebug>
+#include "ARX.h"
 using namespace std;
 class ARX;
 
@@ -107,7 +108,7 @@ public:
                 b=str1;
                 data.push_back(bufor);
                 sygnal=val12;
-                Pid->Ti=val13;
+                Pid->suma=val13;
             }
             else {
              std::cerr << "B³¹d odczytu wiersza danych: " << linia << std::endl;

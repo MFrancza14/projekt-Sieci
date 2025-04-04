@@ -20,6 +20,12 @@ private slots:
 
     void on_btnRestart_clicked();
 
+    void on_buttonBox_accepted();
+
+    void on_SpinBoxZaklucenia_editingFinished();
+
+    void on_SPINBOXK_editingFinished();
+
 private:
     Ui::ARXwindow *ui;
     App* app;

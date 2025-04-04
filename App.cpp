@@ -107,7 +107,7 @@ void App::zapisBazydanychdopliku() {
                 file<< Pid->getWzmocnienieCalkujace()<<"\t"<<Pid->getWzmocnienieProporcjonalne()<<"\t"<<Pid->getWzmocnienieRowniczkujace()<<"\t";
                 file<<elem->getUp()<<"\t" <<elem->getUi() << "\t"<< elem->getUd()<< "\t" ;
                 file<<elem->getUchyb()<<"\t"<<getk()<<"\t"<<getinterwal()<<"\t";
-                file<<sygnal<<"\t"<<Pid->Ti<<"\n";
+                file<<sygnal<<"\t"<<Pid->suma<<"\n";
 
             }
             else {

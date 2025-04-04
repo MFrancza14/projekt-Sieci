@@ -74,3 +74,21 @@ void ARXwindow::on_btnRestart_clicked()
     setData();
 }
 
+
+void ARXwindow::on_buttonBox_accepted()
+{
+    setData();
+}
+
+
+void ARXwindow::on_SpinBoxZaklucenia_editingFinished()
+{
+        app->arx->setzasiegZak(ui->SpinBoxZaklucenia->value());
+}
+
+
+void ARXwindow::on_SPINBOXK_editingFinished()
+{
+    app->setk(ui->SPINBOXK->value());
+}
+

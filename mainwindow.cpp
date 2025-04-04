@@ -39,8 +39,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->comboBox->addItem("Sinusoidalny", QVariant(1));
     ui->comboBox->addItem("Prostokontny", QVariant(2));
 
-
-
+    ui->comboBox_2->addItem("stałą przed sumą",QVariant(0));
+    ui->comboBox_2->addItem("stałą pod sumą",QVariant(1));
 
     app->setinterwal(ui->SPINBOXINTERWAL->value());
     app->Pid->ustawWzmocnienieCalkujace(ui->SPINBOXKI->value());
@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
     app->setk(1);
     app->a =   "-0.4";
     app->b =   "0.6";
+    app->Pid->trybpracy=ui->comboBox_2->currentData().toInt();
     /*
      * QString input = ui->INPUTA->toPlainText();
     if (input.isEmpty()) {
@@ -73,9 +74,44 @@ MainWindow::MainWindow(QWidget *parent)
     //QMessageBox::information(this, "Sukces", "Wartość B została ustawiona jako: " + input);
     */
     timer->start(app->getinterwal());
+    //char 3
+    chart3 = new QChart();
+    chart3->setBackgroundVisible(true);
+
+    // Uchyb
+    seriesUchyb = new QLineSeries();
+    seriesUchyb->setName("Uchyb");
+    QPen pende(Qt::black);
+    pende.setWidth(2);
+    seriesUchyb->setPen(pende);
+    chart3->addSeries( seriesUchyb);
+
+    // Oś X
+    axisX3 = new QValueAxis();
+    axisX3->setRange(1, 100);
+    axisX3->setTitleText("Czas");
+    chart3->addAxis(axisX3, Qt::AlignBottom);
+
+    // Oś Y
+    axisY3 = new QValueAxis();
+    axisY3->setRange(-0.4,0.5);
+    axisY3->setTitleText("Wartość");
+    chart3->addAxis(axisY3, Qt::AlignLeft);
+
+
+    // Tworzenie widoku wykresu
+    chartView3 = new QChartView(chart3, this);
+    chartView3->setRenderHint(QPainter::Antialiasing);
+    chartView3->setStyleSheet("border: none;");
+    // Dodanie wykresu do kontenera w interfejsie użytkownika
+    ui->chartContainer_3->setLayout(new QVBoxLayout());
+    ui->chartContainer_3->layout()->addWidget(chartView3);
+
     // Tworzenie wykresu dla chart1
     chart1 = new QChart();
     chart1->setBackgroundVisible(true);
+
+
 
     // Up
     seriesUp = new QLineSeries();
@@ -98,13 +134,7 @@ MainWindow::MainWindow(QWidget *parent)
     seriesUd->setPen(pend);
     chart1->addSeries(seriesUd);
 
-    // Uchyb
-    seriesUchyb = new QLineSeries();
-     seriesUchyb->setName("Uchyb");
-    QPen pende(Qt::black);
-    pende.setWidth(2);
-     seriesUchyb->setPen(pende);
-    chart1->addSeries( seriesUchyb);
+
 
     // Oś X
     axisX1 = new QValueAxis();
@@ -130,13 +160,13 @@ MainWindow::MainWindow(QWidget *parent)
     seriesUd->attachAxis(axisX1);
     seriesUd->attachAxis(axisY1);
 
-    seriesUchyb->attachAxis(axisX1);
-    seriesUchyb->attachAxis(axisY1);
+    seriesUchyb->attachAxis(axisX3);
+    seriesUchyb->attachAxis(axisY3);
 
     // Tworzenie widoku wykresu
     chartView1 = new QChartView(chart1, this);
     chartView1->setRenderHint(QPainter::Antialiasing);
-
+    chartView1->setStyleSheet("border: none;");
     // Dodanie wykresu do kontenera w interfejsie użytkownika
     ui->chartContainer_2->setLayout(new QVBoxLayout());
     ui->chartContainer_2->layout()->addWidget(chartView1);
@@ -193,6 +223,8 @@ MainWindow::MainWindow(QWidget *parent)
     axisY->setRange(-0.1, 0.1);
     axisY->setTitleText("Wartość");
     chart->addAxis(axisY, Qt::AlignLeft);
+    chart->legend()->setContentsMargins(0, 0, 0, 0);
+    chart->legend()->setFont(QFont("Arial", 8));
     seriesY->attachAxis(axisY);
     seriesU->attachAxis(axisY);
 
@@ -200,7 +232,7 @@ MainWindow::MainWindow(QWidget *parent)
     //tworzenie widoku wykrersu
     chartView = new QChartView(chart, this);
     chartView->setRenderHint(QPainter::Antialiasing);
-
+    chartView->setStyleSheet("border: none;");
     //dodanie wykresu do widoku cartcontiner
     ui->chartContainer->setLayout(new QVBoxLayout());
     ui->chartContainer->layout()->addWidget(chartView);
@@ -233,7 +265,7 @@ void MainWindow::setUIFromApp()
 
     ui->SPINBOXINTERWAL->setValue(app->getinterwal());
     ui->comboBox->setCurrentIndex(app->sygnal);
-
+    ui->comboBox_2->setCurrentIndex(app->Pid->trybpracy);
     // Jeśli kiedyś będziesz używać INPUTA i INPUTB
     // ui->INPUTA->setPlainText(QString::fromStdString(app->a));
     // ui->INPUTB->setPlainText(QString::fromStdString(app->b));
@@ -246,7 +278,7 @@ void MainWindow::setUIFromApp()
 void MainWindow::on_START_clicked() {
      if (app) {
     app->startSymulacja();
-         qDebug()<<app->getinterwal();
+       //  qDebug()<<app->getinterwal();
     timer->start(app->getinterwal());      // timer co 100 ms
     //qDebug() << "Symulacja uruchomiona.";
     ui->START->setEnabled(false);
@@ -336,17 +368,23 @@ void MainWindow::on_ODCZYT_clicked()
                     axisY->setRange(axisY->min(), axisY->max()*1.8 );
                 }
                 if (ostatniElement->getUp() < axisY1->min()*0.8 ||
-                    ostatniElement->getUchyb()< axisY1->min()*0.8 ||
+
                     ostatniElement->getUi()<axisY1->min()*0.8 ||
                     ostatniElement->getUd()<axisY1->min()*0.8) {
                     axisY1->setRange(axisY1->min()*1.8, axisY1->max() );
                 }
                 if (ostatniElement->getUp() > axisY1->max()*0.8 ||
-                    ostatniElement->getUchyb()> axisY1->max()*0.8 ||
+
                     ostatniElement->getUi()>axisY1->max()*0.8 ||
                     ostatniElement->getUd()>axisY1->max()*0.8
                     ) {
                     axisY1->setRange(axisY1->min(), axisY1->max()*1.8 );
+                }
+                if(ostatniElement->getUchyb()< axisY3->min()*0.8 ){
+                axisY3->setRange(axisY3->min()*1.8, axisY3->max() );
+                }
+                if(ostatniElement->getUchyb()> axisY1->max()*0.8  ){
+                     axisY1->setRange(axisY1->min(), axisY1->max()*1.8 );
                 }
 
             } else {
@@ -403,10 +441,53 @@ void MainWindow::on_ODCZYT_clicked()
         qDebug() << "Blad: App niezainicjalizwane";
     }
 }
+#include <QRandomGenerator> // dodaj na górze pliku
+
+
+void MainWindow::autoAdjustGroupedAxisY(const QList<QLineSeries*>& seriesList, QValueAxis* axisY) {
+
+        if (seriesList.isEmpty()) return;
+
+        qreal minY = 0;
+        qreal maxY = 0;
+        bool first = true;
+
+        for (QLineSeries* series : seriesList) {
+            int count = series->count();
+            if (count == 0) continue;
+
+            int endIndex = count - 1;
+            int startIndex = qMax(0, endIndex - 99);
+            int rangeSize = endIndex - startIndex + 1;
+
+            int samples = qMin(25, rangeSize); // liczba próbek do analizy
+
+            for (int s = 0; s < samples; ++s) {
+                int randomIndex = startIndex + QRandomGenerator::global()->bounded(rangeSize);
+                qreal y = series->at(randomIndex).y();
+
+                if (first) {
+                    minY = maxY = y;
+                    first = false;
+                } else {
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        if (first) return; // brak danych
+
+        qreal margin = (maxY - minY) * 0.15;
+        if (margin == 0) margin = 0.01;
+
+        axisY->setRange(minY - margin, maxY + margin);}
+
+
 void MainWindow::updateChart()
 {
     if (app->data.empty()) {
-        qDebug() << "Brak danych w `app->data`";
+       // qDebug() << "Brak danych w `app->data`";
         return;
     }
 
@@ -425,8 +506,9 @@ void MainWindow::updateChart()
         if (ostatniElement->getI() > axisX->max()*0.80 ) {
             axisX->setRange(axisX->min() + 1, axisX->max() + 1);
             axisX1->setRange(axisX1->min() + 1, axisX1->max() + 1);
+            axisX3->setRange(axisX3->min() + 1, axisX3->max() + 1);
         }
-        if (ostatniElement->getY() < axisY->min()*0.8 ||
+         if (ostatniElement->getY() < axisY->min()*0.8 ||
             ostatniElement->getW()<  axisY->min()*0.8 ||
             ostatniElement->getU()<axisY->min()*0.8
             ) {
@@ -438,23 +520,37 @@ void MainWindow::updateChart()
             axisY->setRange(axisY->min(), axisY->max()*1.8 );
         }
         if (ostatniElement->getUp() < axisY1->min()*0.8 ||
-            ostatniElement->getUchyb()< axisY1->min()*0.8 ||
+
             ostatniElement->getUi()<axisY1->min()*0.8 ||
             ostatniElement->getUd()<axisY1->min()*0.8) {
             axisY1->setRange(axisY1->min() *1.8, axisY1->max() );
         }
         if (ostatniElement->getUp() > axisY1->max()*0.8 ||
-            ostatniElement->getUchyb()> axisY1->max()*0.8 ||
+
             ostatniElement->getUi()>axisY1->max()*0.8 ||
             ostatniElement->getUd()>axisY1->max()*0.8
             ) {
             axisY1->setRange(axisY1->min(), axisY1->max()*1.8 );
         }
+        if( ostatniElement->getUchyb()> axisY3->max()*0.8 ){
+             axisY3->setRange(axisY3->min(), axisY3->max()*1.8 );
+        }
+        if(   ostatniElement->getUchyb()< axisY3->min()*0.8  ){
+             axisY3->setRange(axisY3->min() *1.8, axisY3->max() );
+        }
+
 
 
 
     } else {
-        qDebug() << "`app->data` to nullptr";
+        //qDebug() << "`app->data` to nullptr";
+    }
+    updateCounter++;
+
+    if (updateCounter % 75 ==0) {
+        autoAdjustGroupedAxisY({seriesY, seriesU, seriesW}, axisY);
+        autoAdjustGroupedAxisY({seriesUp, seriesUi, seriesUd}, axisY1);
+        autoAdjustGroupedAxisY({seriesUchyb}, axisY3);
     }
 }
 
@@ -472,6 +568,7 @@ void MainWindow::on_RESET_clicked()
     BuforDanych::licznikInstancji=-1;
     app->Pid->resetPamieci();
 
+    app->Pid->trybpracy=0;
 
 
 
@@ -486,7 +583,7 @@ void MainWindow::on_RESET_clicked()
     ui->SPINBOXINTERWAL->setValue(100);
 
     ui->comboBox->setCurrentIndex(0);
-
+    ui->comboBox_2->setCurrentIndex(0);
     //
     app->setinterwal(ui->SPINBOXINTERWAL->value());
     app->Pid->ustawWzmocnienieCalkujace(ui->SPINBOXKI->value());
@@ -496,9 +593,9 @@ void MainWindow::on_RESET_clicked()
     app->syg->sett(ui->SPINBOXOKRES->value());
     app->syg->setp(ui->SPINBOXWYPELNIENIE->value());
     app->syg->setA(ui->SPINBOXAMPLITUDA->value());
-
+    app->Pid->trybpracy=0;
     app->Pid->poprzedniUchyb=0;
-    app->Pid->Ti=0;
+    app->Pid->suma=0;
     app->Pid->uchyb=0;
     app->oldY=0;
 
@@ -540,6 +637,7 @@ void MainWindow::on_BTNUSTAWALL_clicked()
     app->syg->sett(ui->SPINBOXOKRES->value());
     app->syg->setp(ui->SPINBOXWYPELNIENIE->value());
     app->syg->setA(ui->SPINBOXAMPLITUDA->value());
+    app->Pid->trybpracy=ui->comboBox_2->currentData().toInt();
    /* QString input = ui->INPUTA->toPlainText();
     if (input.isEmpty()) {
        app->a="0";
@@ -623,10 +721,112 @@ void MainWindow::clearAllSeries()
     if (seriesUi) seriesUi->clear();
     if (seriesUchyb) seriesUchyb->clear();
 }
+
+
+
 void MainWindow::resetAxes()
 {
     if (axisX)  axisX->setRange(0, 100);
     if (axisY)  axisY->setRange(-0.1, 0.1);
     if (axisX1) axisX1->setRange(0, 100);
     if (axisY1) axisY1->setRange(-0.1, 0.1);
+    if (axisX3) axisX3->setRange(0, 100);
+    if (axisY3) axisY3->setRange(-0.1, 0.1);
 }
+
+void MainWindow::on_ResetCalk_clicked()
+{
+    app->Pid->suma=0;
+}
+
+
+void MainWindow::on_pushButton_5_clicked()
+{
+    app->Pid->poprzedniUchyb=0;
+}
+
+
+void MainWindow::on_SPINBOXAMPLITUDA_editingFinished()
+{
+    app->syg->setA(ui->SPINBOXAMPLITUDA->value());
+}
+/*
+ *
+    //
+
+
+    ;
+
+
+
+
+    app->Pid->trybpracy=ui->comboBox_2->currentData().toInt();
+   /* QString input = ui->INPUTA->toPlainText();
+    if (input.isEmpty()) {
+       app->a="0";
+        return;
+    }
+    app->a = input.toStdString();
+    // Wyświetl komunikat o sukcesie
+    //QMessageBox::information(this, "Sukces", "Wartość A została ustawiona jako: " + input);
+     input = ui->INPUTB->toPlainText();
+    if (input.isEmpty()) {
+         app->b="0";
+        return;
+    }
+
+    app->b = input.toStdString();
+    //QMessageBox::information(this, "Sukces", "Wartość B została ustawiona jako: " + input);
+
+
+}
+*/
+
+void MainWindow::on_comboBox_currentIndexChanged(int index)
+{
+    app->sygnal=index;
+}
+
+
+void MainWindow::on_SPINBOXOKRES_editingFinished()
+{
+    app->syg->sett(ui->SPINBOXOKRES->value());
+}
+
+
+void MainWindow::on_SPINBOXWYPELNIENIE_editingFinished()
+{
+     app->syg->setp(ui->SPINBOXWYPELNIENIE->value());
+}
+
+
+void MainWindow::on_SPINBOXINTERWAL_editingFinished()
+{   app->setinterwal(ui->SPINBOXINTERWAL->value());
+    timer->start(app->getinterwal());
+}
+
+
+void MainWindow::on_SPINBOXKD_editingFinished()
+{
+     app->Pid->ustawWzmocnienieRowniczkujace(ui->SPINBOXKD->value());
+}
+
+
+void MainWindow::on_SPINBOXKI_editingFinished()
+{
+     app->Pid->ustawWzmocnienieCalkujace(ui->SPINBOXKI->value());
+}
+
+
+void MainWindow::on_SPINBOXKP_editingFinished()
+{
+    app->Pid->ustawWzmocnienieProporcjonalne(ui->SPINBOXKP->value());
+}
+
+
+void MainWindow::on_comboBox_2_currentIndexChanged(int index)
+{
+    app->Pid->trybpracy=index;
+
+}
+

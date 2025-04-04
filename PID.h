@@ -12,8 +12,9 @@ private:
     double poprzednia = 0;
 
 public:
+    int trybpracy=0;
     double poprzedniUchyb;
-    double Ti = 0;
+    double suma = 0;
     double Up;
     double Ui;
     double Ud;

@@ -43,15 +43,44 @@ private slots:
 
     void on_pushButton_3_clicked();
 
+    void on_ResetCalk_clicked();
+
+    void on_pushButton_5_clicked();
+
+    void on_SPINBOXAMPLITUDA_editingFinished();
+
+    void on_comboBox_currentIndexChanged(int index);
+
+    void on_SPINBOXOKRES_editingFinished();
+
+    void on_SPINBOXWYPELNIENIE_editingFinished();
+
+    void on_SPINBOXINTERWAL_editingFinished();
+
+    void on_SPINBOXKD_editingFinished();
+
+    void on_SPINBOXKI_editingFinished();
+
+    void on_SPINBOXKP_editingFinished();
+
+    void on_comboBox_2_currentIndexChanged(int index);
+
 private:
     void setUIFromApp();
     void clearAllSeries();
     void resetAxes();
+    void autoAdjustGroupedAxisY(const QList<QLineSeries*>& seriesList, QValueAxis* axisY);
     Ui::MainWindow *ui;
     App* app;
     QChart *chart;
     QChartView *chartView;
     QChart *chart1;
+    QChart *chart3;
+    QChartView *chartView3;
+    QValueAxis *axisX3;
+    QValueAxis *axisY3;
+    int updateCounter = 0;
+
     QChartView *chartView1;
     QValueAxis *axisX1;
     QValueAxis *axisY1;
