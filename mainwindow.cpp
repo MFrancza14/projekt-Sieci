@@ -26,6 +26,32 @@ MainWindow::MainWindow(QWidget *parent)
     app->syg->sett(10);
     app->syg->setp(0.5);
     ui->setupUi(this);
+
+    // Inicjalizacja NetworkManager
+    network = new NetworkManager(this);
+
+    connect(network, &NetworkManager::connected, this, [=](const QString &ip){
+        ui->lblConnectionStatus->setText("Połączono z: " + ip);
+        ui->textLog->append("Połączono z: " + ip);
+    });
+
+    connect(network, &NetworkManager::disconnected, this, [=](){
+        ui->lblConnectionStatus->setText("Brak połączenia");
+        ui->textLog->append("Rozłączono.");
+    });
+
+    connect(network, &NetworkManager::messageReceived, this, [=](const QString &msg){
+        ui->textLog->append("Odebrano: " + msg);
+    });
+
+    connect(network, &NetworkManager::errorOccurred, this, [=](const QString &err){
+        ui->textLog->append("Błąd: " + err);
+    });
+
+    ui->lblConnectionStatus->setText("Status: brak połączenia");
+    ui->lblTrybPracy->setText("Obecny tryb: lokalny");
+
+
     app->sygnal=0;
     app->a="-0.4";
     app->b="0,6";
@@ -828,5 +854,44 @@ void MainWindow::on_comboBox_2_currentIndexChanged(int index)
 {
     app->Pid->trybpracy=index;
 
+}
+
+
+void MainWindow::on_btnTrybPracy_clicked()
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Zmiana trybu", "Czy na pewno chcesz zmienić tryb pracy?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes) {
+        QString currentText = ui->lblTrybPracy->text();
+        if (currentText.contains("lokalny", Qt::CaseInsensitive)) {
+            ui->lblTrybPracy->setText("Obecny tryb: sieciowy");
+            ui->textLog->append("Tryb zmieniony na sieciowy.");
+        } else {
+            ui->lblTrybPracy->setText("Obecny tryb: lokalny");
+            ui->textLog->append("Tryb zmieniony na lokalny.");
+        }
+    }
+}
+
+
+void MainWindow::on_btnConnect_clicked()
+{
+    QString ip = ui->editIpAddress->text();
+    network->connectToServer(ip, 1234); // port ustalasz sam
+
+}
+
+
+void MainWindow::on_btnDisconnect_clicked()
+{
+    network->disconnect();
+}
+
+
+void MainWindow::on_btnStartServer_clicked()
+{
+    network->startServer(1234);
+    ui->textLog->append("Serwer nasłuchuje na porcie 1234");
 }
 

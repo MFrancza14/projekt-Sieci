@@ -9,6 +9,7 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 #include "arxwindow.h"
+#include "networkmanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -65,12 +66,19 @@ private slots:
 
     void on_comboBox_2_currentIndexChanged(int index);
 
+    void on_btnTrybPracy_clicked();
+
+    void on_btnConnect_clicked();
+
+    void on_btnDisconnect_clicked();
+
 private:
     void setUIFromApp();
     void clearAllSeries();
     void resetAxes();
     void autoAdjustGroupedAxisY(const QList<QLineSeries*>& seriesList, QValueAxis* axisY);
     Ui::MainWindow *ui;
+    NetworkManager *network;
     App* app;
     QChart *chart;
     QChartView *chartView;
@@ -97,6 +105,6 @@ private:
     QValueAxis *axisY;
     QTimer *timer;        //timer
     ARXwindow *arx_window;
-    int currentX;            //
+    int currentX;  //
 };
 #endif // MAINWINDOW_H

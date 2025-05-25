@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -18,6 +18,7 @@ SOURCES += \
     arxwindow.cpp \
     main.cpp \
     mainwindow.cpp \
+    networkmanager.cpp \
     test.cpp
 
 HEADERS += \
@@ -28,6 +29,7 @@ HEADERS += \
     Sygnal.h \
     arxwindow.h \
     mainwindow.h \
+    networkmanager.h \
     test.h
 
 FORMS += \
