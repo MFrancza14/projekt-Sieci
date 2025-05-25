@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 
 {
+    app->uiParent = this;
     ARX* arx = new ARX();
     Sygnal* syg = new Sygnal();
     PID* pid = new PID(0.5, 5.0, 0.2);
@@ -30,19 +31,57 @@ MainWindow::MainWindow(QWidget *parent)
     // Inicjalizacja NetworkManager
     network = new NetworkManager(this);
 
-    connect(network, &NetworkManager::connected, this, [=](const QString &ip){
-        ui->lblConnectionStatus->setText("Połączono z: " + ip);
-        ui->textLog->append("Połączono z: " + ip);
-    });
 
-    connect(network, &NetworkManager::disconnected, this, [=](){
-        ui->lblConnectionStatus->setText("Brak połączenia");
-        ui->textLog->append("Rozłączono.");
-    });
 
     connect(network, &NetworkManager::messageReceived, this, [=](const QString &msg){
+        if (msg.startsWith("OUTPUT:")) {
+            QStringList parts = msg.split(":");
+            if (parts.size() >= 3) {
+                double y = parts[1].toDouble();
+                double zaklocenie = parts[2].toDouble();
+                app->setoldY(y);
+                app->oczekujeNaOutput = false;
+
+                if (!app->data.empty()) {
+                    app->data.back()->setZaklucenie(zaklocenie);
+                }
+
+                ui->textLog->append("Odebrano OUTPUT: " + QString::number(y) +
+                                    ", zakłócenie: " + QString::number(zaklocenie));
+            }
+            return;
+        }
+
+        if (msg.startsWith("CTRL:")) {
+            double u = msg.mid(5).toDouble();
+
+            BuforDanych* nowy = new BuforDanych();
+            nowy->setU(u);
+            nowy->setY(app->getoldY());
+            nowy->setA(app->a);
+            nowy->setB(app->b);
+
+            double zaklocenie = app->arx->generateDisturbance();
+            nowy->setZaklucenie(zaklocenie);
+
+            nowy->setID(app->data.size());
+            app->data.push_back(nowy);
+
+            double y = app->arx->calcAll(app->data);
+            nowy->setY(y);
+            app->setoldY(y);
+
+            QString response = "OUTPUT:" + QString::number(y) + ":" + QString::number(zaklocenie);
+            network->sendMessage(response);
+
+            ui->textLog->append("Odebrano CTRL: " + QString::number(u));
+            ui->textLog->append("Odesłano OUTPUT: " + QString::number(y) + ", zakłócenie: " + QString::number(zaklocenie));
+            return;
+        }
+
         ui->textLog->append("Odebrano: " + msg);
     });
+
 
     connect(network, &NetworkManager::errorOccurred, this, [=](const QString &err){
         ui->textLog->append("Błąd: " + err);
@@ -895,3 +934,10 @@ void MainWindow::on_btnStartServer_clicked()
     ui->textLog->append("Serwer nasłuchuje na porcie 1234");
 }
 
+void MainWindow::wyslijSterowanie(double u)
+{
+    if (network) {
+        network->sendMessage("CTRL:" + QString::number(u, 'f', 6));
+        ui->textLog->append("Wysłano: CTRL:" + QString::number(u, 'f', 6));
+    }
+}

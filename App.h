@@ -15,18 +15,26 @@
 
 #include <qDebug>
 #include "ARX.h"
+
+
 using namespace std;
 class ARX;
 
+enum TrybPracy { TrybLokalny, TrybSieciowy };
+
+class MainWindow;
 class App {
 private:
     bool run = false; // start stop
-
+    TrybPracy trybPracy = TrybLokalny;
     int k=1;
     int interwal=100;
 
 public:
-    ARX* arx;
+    bool oczekujeNaOutput = false;
+    ARX* arx;      // deklaracja wstêpna (forward)
+    MainWindow* uiParent = nullptr;  // wskaŸnik do GUI (np. do wywo³ania sendMessage)
+
     double oldY = 0;
     double getoldY();
     void setoldY(double y);

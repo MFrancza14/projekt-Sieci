@@ -1,6 +1,7 @@
 #include "App.h"
 #include <iostream>
 #include <QDebug>
+#include "mainwindow.h"
 using namespace std;
 
 App::App()
@@ -26,35 +27,51 @@ void App::stopSymulacja() {
     run = false;
 }
 void App::symulacjaStep() {
-    if (!run) {
-        return;
-    }
+    if (!run) return;
+
     BuforDanych* nowaBaza = new BuforDanych();
-    //syg->setA(amplituda);
     nowaBaza->setB(b);
-    //cerr<<syg->axx();
     nowaBaza->setA(a);
     nowaBaza->setZaklucenie(arx->generateDisturbance());
     nowaBaza->k = getk();
     nowaBaza->setY(getoldY());
     syg->seti(nowaBaza->getID());
-    nowaBaza->setW(syg->generateSignal(sygnal)); 
+    nowaBaza->setW(syg->generateSignal(sygnal));
     nowaBaza->setU(Pid->obliczSprzezenie(nowaBaza->getW(), oldY));
     nowaBaza->setUp(Pid->Up);
     nowaBaza->setUi(Pid->Ui);
     nowaBaza->setUd(Pid->Ud);
     nowaBaza->setUchyb(Pid->uchyb);
-   // qDebug()<<Pid->uchyb;
-    data.push_back(nowaBaza);
-    if (arx) {
+
+    // ? LOKALNY TRYB — pe³na symulacja
+    if (trybPracy == TrybLokalny && arx) {
+        data.push_back(nowaBaza);
         double wynikCalcAll = arx->calcAll(data);
         data.back()->setY(wynikCalcAll);
-
+        oldY = wynikCalcAll;
+        return;
     }
-    oldY=data.back()->getY();
-        // Debug: Informacje o dodanych danych
-  //  qDebug() << "Dodano punkt do symulacji: ID =" << data.back()->getI()
-   //          << ", Y =" << data.back()->getY() << ", U =" << data.back()->getU();
+
+    // ? SIECIOWY TRYB — wyœlij tylko CTRL:<u>, reszt¹ zajmuje siê klient
+    if (trybPracy == TrybSieciowy) {
+        if (oczekujeNaOutput) {
+            delete nowaBaza;
+            return;
+        }
+
+        oczekujeNaOutput = true;
+        data.push_back(nowaBaza); // dodajemy, ale nie obliczamy jeszcze Y
+        double u = nowaBaza->getU();
+
+        if (uiParent && uiParent->network) {
+            QString msg = "CTRL:" + QString::number(u);
+            uiParent->network->sendMessage(msg);
+            qDebug() << "[SIEÆ] Wys³ano CTRL:" << msg;
+        }
+        return;
+    }
+
+    delete nowaBaza; // awaryjne czyszczenie (powinno byæ unreachable)
 }
 
 

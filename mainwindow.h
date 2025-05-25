@@ -24,8 +24,11 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void wyslijSterowanie(double u);
+    NetworkManager *network;
 
 private slots:
+
     void on_START_clicked();
     void on_STOP_clicked();
 
@@ -72,13 +75,15 @@ private slots:
 
     void on_btnDisconnect_clicked();
 
+    void on_btnStartServer_clicked();
+
 private:
     void setUIFromApp();
     void clearAllSeries();
     void resetAxes();
     void autoAdjustGroupedAxisY(const QList<QLineSeries*>& seriesList, QValueAxis* axisY);
     Ui::MainWindow *ui;
-    NetworkManager *network;
+
     App* app;
     QChart *chart;
     QChartView *chartView;
